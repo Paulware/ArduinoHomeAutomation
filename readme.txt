@@ -1,3 +1,5 @@
+View the HomeAutomation.docx file for detailed information on setup.
+
 Arduino sketches are located in the sketches directory
   The server directory has a the webserver sketch.
   The deviceClient has an example client sketch
