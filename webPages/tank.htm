@@ -1,0 +1,153 @@
+<html>
+<Script Language="Javascript">  
+  var lastX;
+  var lastY;  
+  var lastState;
+  var testTimer;  
+  var startTime;
+  var webServerAddress
+  var timeout
+  
+  webServerAddress = "http://192.168.0.50"
+  
+  lastX = 0;
+  lastY = 0;
+  lastState = 0;
+  timeout = new Date().getTime() / 1;
+  
+  function allDone ()
+  {
+    var msg;
+	if (new Date().getTime() > timeout )
+	{
+  	  //msg = webServerAddress + '/write0:3:0:5:0:6:0:9:0:10:0';  
+      //document.getElementById('cmdFrame').src = msg;
+  	  window.status = msg;
+	}
+  	clearInterval (testTimer);  
+  }
+    
+  function snd (cmd, msTimeout)
+  {
+    var msg;
+    switch (cmd)
+	{
+	  case 1: // left
+	  msg = '5:0:10:0:6:100:9:100';
+	  break;
+	  case 2: // right
+	  msg = '6:0:9:0:5:100:10:100';
+	  break;
+	  case 3: // forward
+	  msg = '6:0:10:0:5:100:9:100';
+	  break;
+	  case 4: // reverse
+	  msg = '5:0:9:0:6:100:10:100';
+	  break;
+	  case 5: // fire
+	  msg = '3:1';
+	  break;
+	}
+    startTime = new Date().getTime();
+	
+	if (testTimer)
+	  clearInterval (testTimer);
+	msg = webServerAddress + '/writeKingTiger1:' + msg;  
+    document.getElementById('cmdFrame').src = msg;
+	window.status = msg;
+	timeout = new Date().getTime() + msTimeout;
+    testTimer = setTimeout (allDone, msTimeout);  
+  }
+ 
+  function fire() 
+  {
+	snd (5,500);
+  }
+  
+  function handleMouseMove ()
+  {
+    var x = window.event.x;
+	var y = window.event.y;
+	var state = -1;
+	var clockwise = -1;
+	var z;
+	var diffX = x - lastX;
+	var diffY = y - lastY;
+	clockwise = false;
+	
+	z = Math.abs ( y);
+	if ( (Math.abs(diffY)>10.0) && (Math.abs(diffX) > 10.0)    ) 
+	{
+	  lastX = x;
+	  lastY = y;
+	  
+	  if (diffY > 0)
+	    if (diffX > 0)
+          state = 0;	    
+	    else
+	      state = 1;
+      else 	
+	    if (diffX > 0)
+	      state = 3;
+	    else
+	      state = 2;
+		    	 
+      if ((state != lastState) && (state != -1))
+      {	  
+  	    switch (state)
+        {
+	      case 0:
+            if (lastState == 3)
+              clockwise = 1;
+            else if (lastState == 1) 
+              clockwise = 0;
+	      break;
+	 
+          case 3:	
+            if (lastState == 0)
+              clockwise = 0;
+            else
+              if (lastState == 2)
+                clockwise = 1;
+            break;
+  
+          default:
+            if (state == lastState + 1)
+              clockwise = 1;
+            else if (lastState == state + 1)
+              clockwise = 0;		
+	  	    break; 
+        } 		
+		 
+		switch (clockwise)
+		{
+		  case 1: // right
+  		    snd (2,200);
+		    break;
+          case 0: // left
+            snd (1,200);		  
+			break;
+		}		
+		if (state != -1)
+  	      lastState = state;
+	  }	
+	}
+  }
+  
+  function handleWheel ()
+  {
+    var evt=window.event
+    var delta=evt.detail? evt.detail*(-120) : evt.wheelDelta
+    if (delta > 0.0)
+      snd (3, 200);	
+	else
+	  snd (4, 200);	  
+  }
+</Script>
+<body onmousewheel="Javascript:handleWheel();"  onmousemove = "Javascript:handleMouseMove()"  onmouseup="Javascript:fire()" >
+	  
+Use mouse wheel to move forward/reverse.<br>
+Rotate clockwise to turn right, counter-clockwise to turn left
+<iframe id="cmdFrame" style="display:none"></iframe>
+</body>
+</html>
